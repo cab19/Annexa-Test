@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="icon" type="image/png" href="./assets/img/favicon.png">
+  <title>
+    Warehouse Supplies - COVID Tracker
+  </title>
+  <!--     Fonts and icons     -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
+  <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+  <!-- Nucleo Icons -->
+  <link href="./assets/css/nucleo-icons.css" rel="stylesheet" />
+  <link href="./assets/css/nucleo-svg.css" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <link href="./assets/css/font-awesome.css" rel="stylesheet" />
+  <link href="./assets/css/nucleo-svg.css" rel="stylesheet" />
+  <!-- CSS Files -->
+  <link href="./assets/css/argon-design-system.css?v=1.2.0" rel="stylesheet" />
+  <!-- Custome CSS Files -->
+  <link href="./assets/css/custom.css" rel="stylesheet" />
+</head>
+
+<body class="login-page">
+  <!-- Navbar -->
+  <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-transparent navbar-light headroom">
+    <div class="container">
+      <a class="navbar-brand mr-lg-5" href="./index.html">
+        <img class="logo" src="./assets/img/brand/default.png"><span class="pl-2 display-4">Warehouse Supplies</span>
+      </a>
+      </div>
+    </div>
+  </nav>
+  <!-- End Navbar -->
+  <section class="section section-shaped section-lg">
+    <div class="shape shape-style-1 bg-gradient-default">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="text-center pb-lg-5">
+        <p class="lead text-white">Total recoveries around Perth and Melbourne offices</p>
+    </div>
+    
+    <div class="container" id="container">
+      <!--   Charts placed here   -->
+    </div>
+  </section>
+  <footer class="footer">
+    <div class="container">
+      <hr>
+      <div class="row float-right">     
+          <div class="copyright">
+            &copy; 2020 Annexa
+          </div>       
+      </div>
+    </div>
+  </footer>
+  <!--   Core JS Files   -->
+  <script src="./assets/js/core/jquery.min.js" type="text/javascript"></script>
+  <script src="./assets/js/core/popper.min.js" type="text/javascript"></script>
+  <script src="./assets/js/core/bootstrap.min.js" type="text/javascript"></script>
+  <script src="./assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <!-- ChartJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+  <!-- PapaParse plugin -->
+  <script src="./assets/js/papaparse.min.js"></script>
+
+  <script>
+
+    /*
+    * Callback function used to create data and charts once COVID data has been parsed.
+    *
+    * @param object 'data' a JSON object containing parsed COVID data
+    *
+    * @return null
+    */ 
+
+    function processData(data) {
+        createGraph(createGraphData(data, "Victoria"), "Victorian"); // create graph for Vic
+        createGraph(createGraphData(data, "Western Australia"), "Western Australian"); // create graph for WA
+    }
+
+    /*
+    * Function which leverages PapaParse to load remote CSV data and parse into JSON format
+    *
+    * @param string 'url' the url to the remote dataset
+    * @param function 'callBack' reference to the function to be called
+    *
+    * @return null
+    */ 
+
+    function parseData(url, callBack) {
+        Papa.parse(url, {
+            download: true,
+            dynamicTyping: true,
+            header: true,
+            complete: function(results) {
+                callBack(results.data);
+            }
+        });
+    }
+
+    // Calling parseData
+    parseData("https://raw.githubusercontent.com/M3IT/COVID-19_Data/master/Data/COVID_AU_state_daily_change.csv", processData);
+
+    /*
+    * Returns an array containing total recoveries for each month
+    *
+    * @param object 'data' a JSON object containing parsed COVID data
+    * @param string 'state' the target state, ie Victoria, Western Australia
+    *
+    * @return Array
+    */ 
+
+    function createGraphData(data, state){
+        let currentMonth = 1; // current months value, starting at 1 (January)
+        let currentRecoveries = 0; // holds a tally of recoveries
+        let monthlyData = []; // holds monthly data and is returned
+
+        for (var key of Object.keys(data)) { // iterate through the data
+            if(data[key].state==state){ // entry belongs to required state
+                let dateOfEntry = data[key].date.split("-"); // create array containing date value from record
+                let recordsMonth = parseInt(dateOfEntry[1]); // get the months numerical value
+                let recordsYear = parseInt(dateOfEntry[0]); // get the years numerical value
+                if(recordsYear == 2020){ // ensure only data from 2020 is used
+                  if(recordsMonth == currentMonth){ // check if current entry is in same month as currentMonth variable
+                      currentRecoveries+= parseInt(data[key].recovered); // add recoveries to currentRecoveries total 
+                  }
+                  else{ // the entry is in a different month
+                      currentMonth = recordsMonth; // set current month to the new value
+                      monthlyData.push(currentRecoveries); // push the total number of recoveries into monthlyData array
+                      currentRecoveries = parseInt(data[key].recovered); // set value of var to equal recoveries for date
+                  }
+                }
+            }
+        }        
+        monthlyData.push(currentRecoveries); // finished processing all records, so push the final months recoveries into array
+        return monthlyData;
+    }
+
+    /*
+    * Creates a graph using supplied data, 
+    *
+    * @param object 'graphData' an array containing recoveries for each month
+    * @param string 'state' the target state, ie Victoria, Western Australia
+    *
+    * @return Array
+    */ 
+
+    function createGraph(graphData, state){           
+        let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];  // Array variable to hold months for label
+        let labelValue = months.slice(0, graphData.length); // trim label array to suit data, ie if only 9 months returned this provides labels for 9 months.
+
+        // Creating date object to handle display of local time for each state.
+        let date = new Date();
+        options = {
+            hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'numeric', year: 'numeric',
+            timeZone: 'Australia/Melbourne',
+        };
+
+        if(state == "Western Australian") // update timezone if state is WA
+            options.timeZone = "Australia/Perth";
+
+        // Title of graph including current time in state
+        let title = state+' Recoveries (as at: '+new Intl.DateTimeFormat('en-AU', options).format(date)+')'
+        
+        // HTML component which will contain the graph
+        let chartDiv = 
+            '<div class="container pb-5">' +
+                '<div class="row justify-content-center">' +
+                    '<div class="col-lg-8">' +
+                        '<div class="card bg-secondary shadow border-0">' +
+                            '<div class="card-body px-lg5- py-lg-5">' +
+                                '<canvas id="'+state+'"></canvas>' + 
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+           '</div>';
+        
+        $(chartDiv).insertAfter("#container"); // insert the new component
+
+        new Chart(document.getElementById(state), { // create the chart with ChartJS, appending it to new component
+            type: 'bar',
+            data: {
+            labels: labelValue,
+            datasets: [
+                {
+                label: "COVID Recoveries",
+                backgroundColor: "#3e95cd",
+                data: graphData
+                }
+            ]
+            },
+            options: {
+            legend: { display: false },
+            title: {
+                display: true,
+                text: title
+            }
+            }
+        });
+    }
+  </script>
+</body>
+</html>
