@@ -26,3 +26,8 @@ N/A
 ## Authors
 
 * **Chris Bounsall** - [chris.bounsall.com](https://chris.bounsall.com)
+
+
+## Acknowledgments
+
+* COVID data sourced from [here](https://github.com/M3IT/COVID-19_Data/blob/master/Data/COVID_AU_state_daily_change.csv)
