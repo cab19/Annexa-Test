@@ -16,7 +16,7 @@ N/A
 
 ## Built With
 
-* [argon CSS] (https://demos.creative-tim.com/argon-design-system/index.html) - Bootstrap design framework
+* [argon CSS](https://demos.creative-tim.com/argon-design-system/index.html) - Bootstrap design framework
 
 * [PapaParse](https://www.papaparse.com/) - an in-browser JavaScript CSV parsing library 
 
